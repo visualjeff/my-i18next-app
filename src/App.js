@@ -6,20 +6,18 @@ import { useTranslation, initReactI18next } from "react-i18next";
 import Fetch from 'i18next-fetch-contentstack';
 
 const options = {
-    loadPath: `https://azure-na-graphql.contentstack.com/stacks/bltc70318e3756fe4ef?environment=development&query=query($locale:String!){all_localizedtext(locale:$locale){items { title text } }}&variables={"locale":"en-us"}`,
-    // loadPath: '/locales/{{lng}}/{{ns}}.json',
+    loadPath: `https://azure-na-graphql.contentstack.com/stacks/bltc70318e3756fe4ef?environment={{ns}}&query=query($locale:String!){all_localizedtext(locale:$locale){items { title text } }}&variables={"locale":"{{lng}}"}`,
     parse: function(data) {
-        const payload = JSON.parse(data);
-        const { data: { all_localizedtext: { items }}} = payload;
+        const { data: { all_localizedtext: { items }}} = data;
 
         let translations = items.reduce((accumulator, value) => {                                                                                                                                                  
             const { ['title']: remove, ...rest } = value;
             rest.text = rest.text.value.reduce((inner_accumulator, inner_value) => {
                 const { ['key']: inner_remove, ...inner_rest } = inner_value;
-                inner_accumulator[inner_remove.replaceAll(" ","_").toLowerCase()] = inner_rest.value;
+                inner_accumulator[inner_remove.replaceAll(" ","_")] = inner_rest.value;
                 return inner_accumulator;
             }, {});
-            accumulator[remove.replaceAll(" ","_").toLowerCase()] = rest.text;
+            accumulator[remove.replaceAll(" ","_")] = rest.text;
             return accumulator;
         }, {});        
 
@@ -28,11 +26,8 @@ const options = {
             return accumulator;
         }, {});
 
-        console.log(`translations: ${JSON.stringify(translations, null, 2)}`);
-
         return translations;
     },
-    addPath: 'locales/add/{{lng}}/{{ns}}',
     stringify: function() {
         return JSON.stringify
     },
@@ -56,7 +51,10 @@ i18n
   .use(initReactI18next)
   .init({
     lng: 'en-US',
-    fallbackLng: 'en-US',
+    fallbackLng: false,
+    lowerCaseLng: true,
+    load: 'currentOnly',
+    ns: 'development',
     debug: true,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
@@ -74,7 +72,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          {t('systemdown')}
+          {t('SystemDown')}
         </p>
         <p>
           Edit <code>src/App.js</code> and save to reload.
