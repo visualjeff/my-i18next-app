@@ -5,11 +5,15 @@ import i18n from "i18next";
 import { useTranslation, initReactI18next } from "react-i18next";
 import Fetch from 'i18next-fetch-contentstack';
 
+const STACK_API_KEY='<STACK_API_KEY_HERE>';
+const ACCESS_TOKEN='<ACCESS_TOKEN_HERE>';
+const TARGET_ENVIRONMENT='development';
+
 const options = {
-    loadPath: `https://azure-na-graphql.contentstack.com/stacks/bltc70318e3756fe4ef?environment={{ns}}&query=query($locale:String!){all_localizedtext(locale:$locale){items { title text } }}&variables={"locale":"{{lng}}"}`,
+    loadPath: `https://azure-na-graphql.contentstack.com/stacks/${STACK_API_KEY}?environment={{ns}}&query=query($locale:String!){all_localizedtext(locale:$locale){items { title text } }}&variables={"locale":"{{lng}}"}`,
+    
     parse: function(data) {
         const { data: { all_localizedtext: { items }}} = data;
-
         let translations = items.reduce((accumulator, value) => {                                                                                                                                                  
             const { ['title']: remove, ...rest } = value;
             rest.text = rest.text.value.reduce((inner_accumulator, inner_value) => {
@@ -19,8 +23,7 @@ const options = {
             }, {});
             accumulator[remove.replaceAll(" ","_")] = rest.text;
             return accumulator;
-        }, {});        
-
+        }, {});
         translations = Object.keys(translations).reduce((accumulator, value) => {
             accumulator = { ...accumulator, ...translations[value]}
             return accumulator;
@@ -28,17 +31,13 @@ const options = {
 
         return translations;
     },
-    stringify: function() {
-        return JSON.stringify
-    },
-    allowMultiLoading: false, // set loadPath: '/locales/resources.json?lng={{lng}}&ns={{ns}}' to adapt to multiLoading
-    multiSeparator: '+',
+    
     fetch: async function (url, options, callback) {
         const response = await fetch(url, {
         mode: 'cors',
         headers: {
             'Content-Type': 'application/json',
-            'access_token': 'cs3ffa737b260d4abd4cd07ece',
+            'access_token': ACCESS_TOKEN,
             }
         });
         return response;
@@ -47,14 +46,14 @@ const options = {
 
 
 i18n
-  .use(Fetch) // passes i18n down to react-i18next
+  .use(Fetch)
   .use(initReactI18next)
   .init({
     lng: 'en-US',
     fallbackLng: false,
     lowerCaseLng: true,
     load: 'currentOnly',
-    ns: 'development',
+    ns: TARGET_ENVIRONMENT,
     debug: true,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
@@ -71,20 +70,11 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        
         <p>
           {t('SystemDown')}
         </p>
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+
       </header>
     </div>
   );
